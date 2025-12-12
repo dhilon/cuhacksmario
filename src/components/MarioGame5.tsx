@@ -313,7 +313,7 @@ const MarioGame5: React.FC = () => {
                     <button className="button" onClick={() => navigate('AI')}>
                         <p className="p2">View AI</p>
                     </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 4</div>
+                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 5</div>
                     <button className="button" onClick={() => navigate('game')}>
                         <p className="p2">1st level</p>
                     </button>

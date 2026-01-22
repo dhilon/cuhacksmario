@@ -93,8 +93,9 @@ ul {
 }
 
 .background {
-  background-image: url("https://www.shutterstock.com/image-illustration/venezuela-tachira-february-05-2023-260nw-2299245343.jpg");
-  background-size: 100vw 12.5vh;
+  background-image: url("/space-bg.png");
+  background-size: cover;
+  background-position: center;
   margin: 0px;
   box-sizing: border-box;
   border: 1px solid;

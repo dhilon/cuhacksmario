@@ -93,9 +93,9 @@ ul {
 }
 
 .background {
-  background-image: url("/mario-bg.png");
-  background-size: cover;
-  background-position: center;
+  background-image: url("/mushroom-bg.png");
+  background-size: auto 100%;
+  background-repeat: repeat-x;
   margin: 0px;
   box-sizing: border-box;
   border: 1px solid;

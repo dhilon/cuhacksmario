@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { navigate } from 'wouter/use-browser-location';
 
-const MarioGame5: React.FC = () => {
+const MarioGame6: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -73,33 +73,32 @@ const MarioGame5: React.FC = () => {
 
             // Create static platforms
             platforms = this.physics.add.staticGroup();
-            platforms.create(50, 568, 'ground').setScale(2).refreshBody();
-            const flagPlatform = platforms.create(790, 45, 'ground').setScale(0.05).refreshBody();
+            platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+            platforms.create(400, 234, 'ground').setScale(0.4).refreshBody();
+            const flagPlatform = platforms.create(790, 60, 'ground').setScale(0.05).refreshBody();
             platforms.create(10, 70, 'ground').setScale(0.30).refreshBody();
 
             // Create 15 moving platforms (all horizontal left-to-right)
             const platformConfigs = [
-                { x: 120, y: 450, minX: 50, maxX: 200, speed: 30 },
-                { x: 500, y: 280, minX: 450, maxX: 600, speed: 135 },
-                { x: 680, y: 480, minX: 600, maxX: 750, speed: 140 },
-                { x: 150, y: 250, minX: 100, maxX: 250, speed: 125 },
-                { x: 580, y: 350, minX: 520, maxX: 650, speed: 12 },
-                { x: 250, y: 150, minX: 150, maxX: 300, speed: 48 },
-                { x: 380, y: 480, minX: 330, maxX: 480, speed: 36 },
-                { x: 520, y: 120, minX: 470, maxX: 620, speed: 74 },
-                { x: 280, y: 380, minX: 230, maxX: 380, speed: 78 },
-                { x: 600, y: 150, minX: 550, maxX: 700, speed: 91 },
+                { x: 400, y: 450, minX: 50, maxX: 700, speed: 117, direction: 1 },
+                { x: 400, y: 280, minX: 50, maxX: 700, speed: 45, direction: -1 },
+                { x: 400, y: 250, minX: 50, maxX: 700, speed: 202.5, direction: 1 },
+                { x: 400, y: 350, minX: 50, maxX: 700, speed: 187.5, direction: -1 },
+                { x: 400, y: 150, minX: 50, maxX: 700, speed: 18, direction: 1 },
+                { x: 400, y: 480, minX: 50, maxX: 700, speed: 72, direction: -1 },
+                { x: 400, y: 120, minX: 50, maxX: 700, speed: 192, direction: 1 },
+                { x: 400, y: 380, minX: 50, maxX: 700, speed: 111, direction: -1 },
+                { x: 400, y: 50, minX: 50, maxX: 700, speed: 50, direction: 1 },
             ];
 
             platformConfigs.forEach((config, index) => {
-                const platform = this.physics.add.sprite(config.x, config.y, 'ground').setScale(0.5);
-                platform.setAngularVelocity(60);
+                const platform = this.physics.add.sprite(config.x, config.y, 'ground').setScale(0.05);
                 platform.body.setAllowGravity(false);
                 platform.body.setImmovable(true);
                 platform.setData('minX', config.minX);
                 platform.setData('maxX', config.maxX);
                 platform.setData('speed', config.speed);
-                platform.setData('direction', Math.random() > 0.5 ? 1 : -1); // Random starting direction
+                platform.setData('direction', config.direction);
                 movingPlatforms.push(platform);
             });
 
@@ -113,14 +112,13 @@ const MarioGame5: React.FC = () => {
             fakeFlag.body.setAllowGravity(false);
 
             // Create player
-            player = this.physics.add.sprite(50, 450, 'mario');
+            player = this.physics.add.sprite(400, 500, 'mario');
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
             // @ts-ignore: onWorldBounds is read-only in TS definitions
             (player.body as any).onWorldBounds = true;
             player.setData('hasLost', false);
             player.setData('hasWon', false);
-            player.setData('checkpoint', false);
 
             // Player animations
             this.anims.create({
@@ -162,7 +160,7 @@ const MarioGame5: React.FC = () => {
 
             // Overlap: player vs. flag
             this.physics.add.overlap(player, flag, () => {
-                if (!player.getData('hasLost') && !player.getData('hasWon') && player.getData('checkpoint')) {
+                if (!player.getData('hasLost') && !player.getData('hasWon')) {
                     player.setData('hasWon', true);
                     player.setVelocity(0, 0);
                     player.anims.stop();
@@ -180,13 +178,16 @@ const MarioGame5: React.FC = () => {
             // Overlap: player vs. fake flag
             this.physics.add.overlap(player, fakeFlag, () => {
                 if (!player.getData('hasLost') && !player.getData('hasWon')) {
-                    player.setData('checkpoint', true);
                     flag.setScale(0.3);
+                    player.setData('hasLost', true);
+                    player.setVelocity(0, 0);
+                    player.anims.stop();
+                    player.setTint(0xb22222);
                     flagPlatform.destroy();
                     platforms.create(790, 50, 'ground').setScale(0.5).refreshBody();
                     checkpoint = this.add
-                        .text(400, 50, 'Now capture the real flag!', {
-                            fontSize: '24px',
+                        .text(400, 50, 'You lost!', {
+                            fontSize: '48px',
                             color: '#ffffff',
                             fontFamily: 'Arial',
                         })
@@ -246,33 +247,6 @@ const MarioGame5: React.FC = () => {
                 }
             });
 
-            // Slide Mario to the right while on a moving platform (include platform velocity)
-            let onMovingPlatform = false;
-            let platformVX = 0;
-            if (player.body) {
-                const body = player.body as Phaser.Physics.Arcade.Body;
-                for (const platform of movingPlatforms) {
-                    const platBody = platform.body as Phaser.Physics.Arcade.Body;
-                    if (!platBody) continue;
-                    const touchingDown = body.blocked.down || body.touching.down;
-                    const closeY = Math.abs(body.bottom - platBody.top) <= 3;
-                    const overlapX = body.right > platBody.left && body.left < platBody.right;
-                    if (touchingDown && closeY && overlapX) {
-                        onMovingPlatform = true;
-                        platformVX = platBody.velocity.x;
-                        break;
-                    }
-                }
-                if (onMovingPlatform) {
-                    player.setAngularVelocity(30);
-                    const slideRightSpeed = 50; // adjust to taste
-                    player.setVelocityX(platformVX + slideRightSpeed);
-                } else {
-                    player.setAngularVelocity(0);
-                    player.setAngle(0);
-                }
-            }
-
             if (cursors && player.body) {
                 // Move Left
                 if (cursors.left.isDown) {
@@ -284,11 +258,9 @@ const MarioGame5: React.FC = () => {
                     player.setVelocityX(160);
                     player.anims.play('right', true);
                 }
-                // Stop Moving (but keep sliding when on a moving platform)
+                // Stop Moving
                 else {
-                    if (!onMovingPlatform) {
-                        player.setVelocityX(0);
-                    }
+                    player.setVelocityX(0);
                 }
 
                 // Jump if on a platform or world-floor
@@ -315,9 +287,9 @@ const MarioGame5: React.FC = () => {
                     <button className="button" onClick={() => navigate('AI')}>
                         <p className="p2">View AI</p>
                     </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 5</div>
-                    <button className="button" onClick={() => navigate('game6')}>
-                        <p className="p2">6th level</p>
+                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 6</div>
+                    <button className="button" onClick={() => navigate('game')}>
+                        <p className="p2">1st level</p>
                     </button>
                     <div style={{ textAlign: 'right', marginTop: '50px' }}>
                         <a
@@ -337,10 +309,30 @@ const MarioGame5: React.FC = () => {
                             Click for a surprise! 🎁
                         </a>
                     </div>
+                    Hint:
+                    <br />
+                    50
+                    <br />
+                    192
+                    <br />
+                    18
+                    <br />
+                    202.5
+                    <br />
+                    -45
+                    <br />
+                    -187.5
+                    <br />
+                    -111
+                    <br />
+                    117
+                    <br />
+                    -72
+                    <br />
                 </div>
             </div>
         </div>
     );
 };
 
-export default MarioGame5;
+export default MarioGame6;

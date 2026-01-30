@@ -225,35 +225,18 @@ const MarioGame3: React.FC = () => {
     return (
         <div>
             <div className="background">
-                <h1 className="text-container">AstroMario Game</h1>
+                <h1 className="text-container">AstroMario Game - Invisible</h1>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                 <div ref={gameContainerRef}></div>
                 <div>
-                    <button className="button" onClick={() => navigate('AI')}>
-                        <p className="p2">View AI</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 3</div>
-                    <button className="button" onClick={() => navigate('game4')}>
-                        <p className="p2">4th level</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>
-                        <a
-                            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'inline-block',
-                                fontSize: '18px',
-                                backgroundColor: '#ff4757',
-                                color: 'white',
-                                textDecoration: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Click for a surprise! 🎁
-                        </a>
+                    <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                        <strong>Level 3: Invisible</strong>
+                    </div>
+                    <div style={{ marginTop: '20px' }}>
+                        <button className="button" onClick={() => navigate('game4')}>
+                            <p className="p2">4th level</p>
+                        </button>
                     </div>
                 </div>
             </div>

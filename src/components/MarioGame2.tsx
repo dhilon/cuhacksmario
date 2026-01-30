@@ -99,6 +99,7 @@ const MarioGame2: React.FC = () => {
             goomba2 = this.physics.add.sprite(400, 100, 'goomba').setScale(1.2);
             goomba2.setBounce(0.2);
             goomba2.setCollideWorldBounds(true);
+            goomba2.setTint(0xFF0000); // Bright red - unkillable
 
             // Create player
             player = this.physics.add.sprite(100, 450, 'mario');
@@ -189,38 +190,61 @@ const MarioGame2: React.FC = () => {
 
             // Detect collision between player and goomba
             this.physics.add.overlap(player, goomba, () => {
-                // Freeze Mario
-                if (!player.getData('hasLost') && !player.getData('hasWon')) {
-                    player.setData('hasLost', true);
-                    player.setVelocity(0, 0);
-                    player.anims.stop(); // Stop animations
-                    player.setTint(0xB22222); // Optional: Add a visual effect (e.g., tint Mario red)
+                if (!player.getData('hasLost') && !player.getData('hasWon') && !goomba.getData('isDead')) {
+                    const playerBottom = player.getBounds().bottom;
+                    const goombaTop = goomba.getBounds().top;
+                    const playerVelY = player.body?.velocity.y || 0;
 
-                    // Display "Level Over" message
-                    const levelOverText = this.add.text(400, 300, 'Game Over', {
-                        fontSize: '48px',
-                        color: '#ffffff',
-                        fontFamily: 'Arial',
-                    });
-                    levelOverText.setOrigin(0.5, 0.5); // Center the text
+                    // Check if Mario is landing on top of goomba
+                    if (playerVelY > 0 && playerBottom < goombaTop + 20) {
+                        // Kill the goomba
+                        goomba.setData('isDead', true);
+                        goomba.setTint(0x666666);
+                        goomba.setAlpha(0.5);
+                        (goomba.body as Phaser.Physics.Arcade.Body).enable = false;
+                        // Give Mario a bounce
+                        player.setVelocityY(-200);
+                    } else {
+                        // Mario dies
+                        player.setData('hasLost', true);
+                        player.setVelocity(0, 0);
+                        player.anims.stop();
+                        player.setTint(0xB22222);
+
+                        const levelOverText = this.add.text(400, 300, 'Game Over', {
+                            fontSize: '48px',
+                            color: '#ffffff',
+                            fontFamily: 'Arial',
+                        });
+                        levelOverText.setOrigin(0.5, 0.5);
+                    }
                 }
             });
 
             this.physics.add.overlap(player, goomba2, () => {
-                // Freeze Mario
                 if (!player.getData('hasLost') && !player.getData('hasWon')) {
-                    player.setData('hasLost', true);
-                    player.setVelocity(0, 0);
-                    player.anims.stop(); // Stop animations
-                    player.setTint(0xB22222); // Optional: Add a visual effect (e.g., tint Mario red)
+                    const playerBottom = player.getBounds().bottom;
+                    const goombaTop = goomba2.getBounds().top;
+                    const playerVelY = player.body?.velocity.y || 0;
 
-                    // Display "Level Over" message
-                    const levelOverText = this.add.text(400, 300, 'Game Over', {
-                        fontSize: '48px',
-                        color: '#ffffff',
-                        fontFamily: 'Arial',
-                    });
-                    levelOverText.setOrigin(0.5, 0.5); // Center the text
+                    // Check if Mario is landing on top of goomba
+                    if (playerVelY > 0 && playerBottom < goombaTop + 20) {
+                        // Unkillable - just bounce Mario off
+                        player.setVelocityY(-200);
+                    } else {
+                        // Mario dies
+                        player.setData('hasLost', true);
+                        player.setVelocity(0, 0);
+                        player.anims.stop();
+                        player.setTint(0xB22222);
+
+                        const levelOverText = this.add.text(400, 300, 'Game Over', {
+                            fontSize: '48px',
+                            color: '#ffffff',
+                            fontFamily: 'Arial',
+                        });
+                        levelOverText.setOrigin(0.5, 0.5);
+                    }
                 }
             });
 
@@ -272,39 +296,21 @@ const MarioGame2: React.FC = () => {
     return (
         <div>
             <div className="background">
-                <h1 className="text-container">AstroMario Game</h1>
+                <h1 className="text-container">AstroMario Game - Goomba Gap</h1>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                <div ref={gameContainerRef} ></div>
+                <div ref={gameContainerRef}></div>
                 <div>
-                    <button className="button" onClick={() => navigate("AI")}><p className="p2">View AI</p></button>
-                    <div style={{ textAlign: "right", marginTop: "50px" }}>Level 2</div>
-                    <button className="button" onClick={() => navigate("game3")}><p className="p2">3rd level</p></button>
-                    <div style={{ textAlign: "right", marginTop: "50px" }}>
-                        <a
-                            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: "inline-block",
-                                fontSize: "18px",
-                                backgroundColor: "#ff4757",
-                                color: "white",
-                                textDecoration: "none",
-                                borderRadius: "5px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Click for a surprise! 🎁
-                        </a>
+                    <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                        <strong>Level 2: Goomba Gap</strong>
+                    </div>
+                    <div style={{ marginTop: '20px' }}>
+                        <button className="button" onClick={() => navigate("game3")}>
+                            <p className="p2">3rd level</p>
+                        </button>
                     </div>
                 </div>
-
             </div>
-
-
-
-
 
 
         </div>

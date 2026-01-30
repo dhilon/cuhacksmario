@@ -188,38 +188,66 @@ const MarioGame: React.FC = () => {
 
       // Detect collision between player and goomba
       this.physics.add.overlap(player, goomba, () => {
-        // Freeze Mario
-        if (!player.getData('hasLost') && !player.getData('hasWon')) {
-          player.setData('hasLost', true);
-          player.setVelocity(0, 0);
-          player.anims.stop(); // Stop animations
-          player.setTint(0xB22222); // Optional: Add a visual effect (e.g., tint Mario red)
+        if (!player.getData('hasLost') && !player.getData('hasWon') && !goomba.getData('isDead')) {
+          const playerBottom = player.getBounds().bottom;
+          const goombaTop = goomba.getBounds().top;
+          const playerVelY = player.body?.velocity.y || 0;
 
-          // Display "Level Over" message
-          const levelOverText = this.add.text(400, 300, 'Game Over', {
-            fontSize: '48px',
-            color: '#ffffff',
-            fontFamily: 'Arial',
-          });
-          levelOverText.setOrigin(0.5, 0.5); // Center the text
+          // Check if Mario is landing on top of goomba
+          if (playerVelY > 0 && playerBottom < goombaTop + 20) {
+            // Kill the goomba
+            goomba.setData('isDead', true);
+            goomba.setTint(0x666666);
+            goomba.setAlpha(0.5);
+            (goomba.body as Phaser.Physics.Arcade.Body).enable = false;
+            // Give Mario a bounce
+            player.setVelocityY(-200);
+          } else {
+            // Mario dies
+            player.setData('hasLost', true);
+            player.setVelocity(0, 0);
+            player.anims.stop();
+            player.setTint(0xB22222);
+
+            const levelOverText = this.add.text(400, 300, 'Game Over', {
+              fontSize: '48px',
+              color: '#ffffff',
+              fontFamily: 'Arial',
+            });
+            levelOverText.setOrigin(0.5, 0.5);
+          }
         }
       });
 
       this.physics.add.overlap(player, goomba2, () => {
-        // Freeze Mario
-        if (!player.getData('hasLost') && !player.getData('hasWon')) {
-          player.setData('hasLost', true);
-          player.setVelocity(0, 0);
-          player.anims.stop(); // Stop animations
-          player.setTint(0xB22222); // Optional: Add a visual effect (e.g., tint Mario red)
+        if (!player.getData('hasLost') && !player.getData('hasWon') && !goomba2.getData('isDead')) {
+          const playerBottom = player.getBounds().bottom;
+          const goombaTop = goomba2.getBounds().top;
+          const playerVelY = player.body?.velocity.y || 0;
 
-          // Display "Level Over" message
-          const levelOverText = this.add.text(400, 300, 'Game Over', {
-            fontSize: '48px',
-            color: '#ffffff',
-            fontFamily: 'Arial',
-          });
-          levelOverText.setOrigin(0.5, 0.5); // Center the text
+          // Check if Mario is landing on top of goomba
+          if (playerVelY > 0 && playerBottom < goombaTop + 20) {
+            // Kill the goomba
+            goomba2.setData('isDead', true);
+            goomba2.setTint(0x666666);
+            goomba2.setAlpha(0.5);
+            (goomba2.body as Phaser.Physics.Arcade.Body).enable = false;
+            // Give Mario a bounce
+            player.setVelocityY(-200);
+          } else {
+            // Mario dies
+            player.setData('hasLost', true);
+            player.setVelocity(0, 0);
+            player.anims.stop();
+            player.setTint(0xB22222);
+
+            const levelOverText = this.add.text(400, 300, 'Game Over', {
+              fontSize: '48px',
+              color: '#ffffff',
+              fontFamily: 'Arial',
+            });
+            levelOverText.setOrigin(0.5, 0.5);
+          }
         }
       });
 
@@ -271,7 +299,7 @@ const MarioGame: React.FC = () => {
   return (
     <div>
       <div className="background">
-        <h1 className="text-container">AstroMario Game</h1>
+        <h1 className="text-container">AstroMario Game - Level 1</h1>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
         <div ref={gameContainerRef} ></div>

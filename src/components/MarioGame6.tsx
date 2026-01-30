@@ -279,56 +279,19 @@ const MarioGame6: React.FC = () => {
     return (
         <div>
             <div className="background">
-                <h1 className="text-container">AstroMario Game</h1>
+                <h1 className="text-container">AstroMario Game - Jahmyr Gibbs</h1>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                 <div ref={gameContainerRef}></div>
                 <div>
-                    <button className="button" onClick={() => navigate('AI')}>
-                        <p className="p2">View AI</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 6</div>
-                    <button className="button" onClick={() => navigate('game')}>
-                        <p className="p2">1st level</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>
-                        <a
-                            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'inline-block',
-                                fontSize: '18px',
-                                backgroundColor: '#ff4757',
-                                color: 'white',
-                                textDecoration: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Click for a surprise! 🎁
-                        </a>
+                    <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                        <strong>Level 6: Jahmyr Gibbs</strong>
                     </div>
-                    Hint:
-                    <br />
-                    50
-                    <br />
-                    192
-                    <br />
-                    18
-                    <br />
-                    202.5
-                    <br />
-                    -45
-                    <br />
-                    -187.5
-                    <br />
-                    -111
-                    <br />
-                    117
-                    <br />
-                    -72
-                    <br />
+                    <div style={{ marginTop: '20px' }}>
+                        <button className="button" onClick={() => navigate('game7')}>
+                            <p className="p2">7th level</p>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -35,6 +35,13 @@ const MarioGame5: React.FC = () => {
         let cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
         let checkpoint: Phaser.GameObjects.Text | undefined;
 
+        // Platform attachment tracking
+        let attachedPlatform: Phaser.Physics.Arcade.Sprite | null = null;
+        let attachedAngle: number = 0; // Angle of platform when Mario landed
+        let attachedOffsetX: number = 0; // Mario's offset from platform center
+        let attachedOffsetY: number = 0;
+        let attachedSide: 'top' | 'bottom' | 'left' | 'right' = 'top';
+
         function preload(this: Phaser.Scene) {
             // Load assets
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
@@ -246,54 +253,152 @@ const MarioGame5: React.FC = () => {
                 }
             });
 
-            // Slide Mario to the right while on a moving platform (include platform velocity)
-            let onMovingPlatform = false;
-            let platformVX = 0;
-            if (player.body) {
-                const body = player.body as Phaser.Physics.Arcade.Body;
+            if (!player.body) return;
+            const body = player.body as Phaser.Physics.Arcade.Body;
+
+            // Check if Mario should attach to a platform
+            if (!attachedPlatform) {
                 for (const platform of movingPlatforms) {
                     const platBody = platform.body as Phaser.Physics.Arcade.Body;
                     if (!platBody) continue;
-                    const touchingDown = body.blocked.down || body.touching.down;
-                    const closeY = Math.abs(body.bottom - platBody.top) <= 3;
-                    const overlapX = body.right > platBody.left && body.left < platBody.right;
-                    if (touchingDown && closeY && overlapX) {
-                        onMovingPlatform = true;
-                        platformVX = platBody.velocity.x;
+
+                    // Check collision from any side
+                    const playerBounds = player.getBounds();
+                    const platBounds = platform.getBounds();
+
+                    const touching = Phaser.Geom.Rectangle.Overlaps(playerBounds, platBounds);
+
+                    if (touching && (body.blocked.down || body.touching.down || body.blocked.up || body.touching.up ||
+                                     body.blocked.left || body.touching.left || body.blocked.right || body.touching.right)) {
+                        // Determine which side Mario landed on
+                        const dx = player.x - platform.x;
+                        const dy = player.y - platform.y;
+
+                        // Convert platform angle to radians and rotate the offset back to find local position
+                        const platAngleRad = Phaser.Math.DegToRad(platform.angle);
+                        const localX = dx * Math.cos(-platAngleRad) - dy * Math.sin(-platAngleRad);
+                        const localY = dx * Math.sin(-platAngleRad) + dy * Math.cos(-platAngleRad);
+
+                        // Determine which side based on local coordinates
+                        const halfWidth = platBounds.width / 2;
+                        const halfHeight = platBounds.height / 2;
+
+                        let detectedSide: 'top' | 'bottom' | 'left' | 'right';
+                        if (Math.abs(localX) / halfWidth > Math.abs(localY) / halfHeight) {
+                            detectedSide = localX > 0 ? 'right' : 'left';
+                        } else {
+                            detectedSide = localY > 0 ? 'bottom' : 'top';
+                        }
+
+                        // Don't attach to the underside of a block
+                        if (detectedSide === 'bottom') {
+                            continue;
+                        }
+
+                        attachedSide = detectedSide;
+                        attachedPlatform = platform;
+                        attachedAngle = platform.angle;
+                        attachedOffsetX = dx;
+                        attachedOffsetY = dy;
+
+                        // Disable gravity while attached
+                        body.setAllowGravity(false);
+                        player.setVelocity(0, 0);
                         break;
                     }
                 }
-                if (onMovingPlatform) {
-                    player.setAngularVelocity(30);
-                    const slideRightSpeed = 50; // adjust to taste
-                    player.setVelocityX(platformVX + slideRightSpeed);
-                } else {
-                    player.setAngularVelocity(0);
-                    player.setAngle(0);
-                }
             }
 
-            if (cursors && player.body) {
-                // Move Left
-                if (cursors.left.isDown) {
-                    player.setVelocityX(-160);
-                    player.anims.play('left', true);
-                }
-                // Move Right
-                else if (cursors.right.isDown) {
-                    player.setVelocityX(160);
-                    player.anims.play('right', true);
-                }
-                // Stop Moving (but keep sliding when on a moving platform)
-                else {
-                    if (!onMovingPlatform) {
-                        player.setVelocityX(0);
+            // If attached to a platform
+            if (attachedPlatform) {
+                const platform = attachedPlatform;
+                const currentAngle = platform.angle;
+
+                // Calculate Mario's absolute angle based on platform and attached side
+                let marioAngle = currentAngle;
+                if (attachedSide === 'bottom') marioAngle += 180;
+                else if (attachedSide === 'left') marioAngle += 90;
+                else if (attachedSide === 'right') marioAngle -= 90;
+
+                // Normalize angle to -180 to 180 range
+                let normalizedAngle = marioAngle % 360;
+                if (normalizedAngle > 180) normalizedAngle -= 360;
+                if (normalizedAngle < -180) normalizedAngle += 360;
+
+                // Check if Mario is horizontal (90 degrees) or upside down (beyond 90)
+                // Fall off if absolute angle >= 90 degrees from upright
+                if (Math.abs(normalizedAngle) >= 90) {
+                    // Detach and fall
+                    attachedPlatform = null;
+                    body.setAllowGravity(true);
+                    player.setAngle(0);
+
+                    // Apply slide velocity based on current orientation
+                    const slideAngle = Phaser.Math.DegToRad(currentAngle);
+                    player.setVelocity(Math.cos(slideAngle) * 150, Math.sin(slideAngle) * 150 + 100);
+                } else {
+                    // Rotate the offset with the platform
+                    const angleDelta = Phaser.Math.DegToRad(currentAngle - attachedAngle);
+                    const rotatedOffsetX = attachedOffsetX * Math.cos(angleDelta) - attachedOffsetY * Math.sin(angleDelta);
+                    const rotatedOffsetY = attachedOffsetX * Math.sin(angleDelta) + attachedOffsetY * Math.cos(angleDelta);
+
+                    // Position Mario relative to platform
+                    player.x = platform.x + rotatedOffsetX;
+                    player.y = platform.y + rotatedOffsetY;
+
+                    // Apply the calculated angle to Mario
+                    player.setAngle(marioAngle);
+
+                    // Move along the platform surface with arrow keys
+                    if (cursors) {
+                        const moveSpeed = 2;
+                        const surfaceAngle = Phaser.Math.DegToRad(currentAngle);
+
+                        if (cursors.left.isDown) {
+                            if (attachedSide === 'top' || attachedSide === 'bottom') {
+                                attachedOffsetX -= moveSpeed * Math.cos(0);
+                            } else {
+                                attachedOffsetY -= moveSpeed;
+                            }
+                            player.anims.play('left', true);
+                        } else if (cursors.right.isDown) {
+                            if (attachedSide === 'top' || attachedSide === 'bottom') {
+                                attachedOffsetX += moveSpeed * Math.cos(0);
+                            } else {
+                                attachedOffsetY += moveSpeed;
+                            }
+                            player.anims.play('right', true);
+                        }
+
+                        // Jump to detach
+                        if (cursors.up.isDown) {
+                            attachedPlatform = null;
+                            body.setAllowGravity(true);
+                            player.setAngle(0);
+
+                            // Jump perpendicular to surface
+                            const jumpAngle = Phaser.Math.DegToRad(marioAngle - 90);
+                            player.setVelocity(Math.cos(jumpAngle) * 100, -330);
+                        }
                     }
                 }
+            } else {
+                // Normal movement when not attached
+                if (cursors) {
+                    if (cursors.left.isDown) {
+                        player.setVelocityX(-160);
+                        player.anims.play('left', true);
+                    } else if (cursors.right.isDown) {
+                        player.setVelocityX(160);
+                        player.anims.play('right', true);
+                    } else {
+                        player.setVelocityX(0);
+                    }
 
-                // Jump if on a platform or world-floor
-                if (cursors.up.isDown && player.body.blocked.down) {
-                    player.setVelocityY(-330);
+                    // Jump if on ground
+                    if (cursors.up.isDown && body.blocked.down) {
+                        player.setVelocityY(-330);
+                    }
                 }
             }
         }
@@ -307,35 +412,18 @@ const MarioGame5: React.FC = () => {
     return (
         <div>
             <div className="background">
-                <h1 className="text-container">AstroMario Game</h1>
+                <h1 className="text-container">AstroMario Game - Rotating</h1>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                 <div ref={gameContainerRef}></div>
                 <div>
-                    <button className="button" onClick={() => navigate('AI')}>
-                        <p className="p2">View AI</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>Level 5</div>
-                    <button className="button" onClick={() => navigate('game6')}>
-                        <p className="p2">6th level</p>
-                    </button>
-                    <div style={{ textAlign: 'right', marginTop: '50px' }}>
-                        <a
-                            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'inline-block',
-                                fontSize: '18px',
-                                backgroundColor: '#ff4757',
-                                color: 'white',
-                                textDecoration: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Click for a surprise! 🎁
-                        </a>
+                    <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                        <strong>Level 5: Rotating</strong>
+                    </div>
+                    <div style={{ marginTop: '20px' }}>
+                        <button className="button" onClick={() => navigate('game6')}>
+                            <p className="p2">6th level</p>
+                        </button>
                     </div>
                 </div>
             </div>

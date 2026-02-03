@@ -95,10 +95,20 @@ const MarioGame8: React.FC = () => {
             (startPlatform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
 
             // Function to generate random platforms
-            // 4 platforms in middle (x=500-900), 11 platforms on sides (x<500 or x>900)
+            // 5 platforms on left (x<500), 4 in middle (x=500-900), 5 on right (x>900)
             // Plus 2 fixed flag platforms
             function generateRandomPlatforms() {
                 const configs = [];
+
+                // 5 platforms on the left (x=50-450)
+                for (let i = 0; i < 5; i++) {
+                    configs.push({
+                        x: 50 + Math.random() * 400, // x between 50-450
+                        y: 80 + Math.random() * 420, // y between 80-500
+                        standTime: 600 + Math.random() * 600,
+                        isFixed: false,
+                    });
+                }
 
                 // 4 platforms in the middle section (x=500-900)
                 for (let i = 0; i < 4; i++) {
@@ -110,11 +120,10 @@ const MarioGame8: React.FC = () => {
                     });
                 }
 
-                // 11 platforms on the sides (x<500 or x>900)
-                for (let i = 0; i < 11; i++) {
-                    const onLeft = Math.random() > 0.5;
+                // 5 platforms on the right (x=950-1150)
+                for (let i = 0; i < 5; i++) {
                     configs.push({
-                        x: onLeft ? (50 + Math.random() * 400) : (950 + Math.random() * 200), // left: 50-450, right: 950-1150
+                        x: 950 + Math.random() * 200, // x between 950-1150
                         y: 80 + Math.random() * 420, // y between 80-500
                         standTime: 600 + Math.random() * 600,
                         isFixed: false,
@@ -132,7 +141,7 @@ const MarioGame8: React.FC = () => {
             let platformConfigs = generateRandomPlatforms();
 
             platformConfigs.forEach((config) => {
-                const platform = this.physics.add.sprite(config.x, config.y, 'ground').setScale(0.12);
+                const platform = this.physics.add.sprite(config.x, config.y, 'ground').setScale(0.25);
                 (platform.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
                 (platform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
                 platform.setData('originalX', config.x);

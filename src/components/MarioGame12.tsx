@@ -42,9 +42,11 @@ const MarioGame12: React.FC = () => {
         let keyS: Phaser.Input.Keyboard.Key | undefined;
         let keyD: Phaser.Input.Keyboard.Key | undefined;
 
-        // Shadow goomba - follows player's past positions
+        // Shadow wario - follows player's past positions
         let playerPositionHistory: { x: number; y: number }[] = [];
         const SHADOW_DELAY = 120; // Number of frames to delay (about 2 seconds at 60fps)
+        let gameStartTime = 0;
+        const SHADOW_APPEAR_DELAY = 3000; // 3 seconds before shadow appears
 
         function preload(this: Phaser.Scene) {
             // Load assets
@@ -60,10 +62,7 @@ const MarioGame12: React.FC = () => {
                 frameWidth: 40,
                 frameHeight: 40,
             });
-            this.load.spritesheet('goomba', '/goomba.png', {
-                frameWidth: 40,
-                frameHeight: 40,
-            });
+            this.load.image('wario', 'https://static.wikia.nocookie.net/mario/images/9/93/MPSWario.png/revision/latest?cb=20220815164105');
         }
 
         function create(this: Phaser.Scene) {
@@ -143,38 +142,43 @@ const MarioGame12: React.FC = () => {
             flag.setOrigin(0.5, 1);
             (flag.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 
-            // Create THREE large unkillable goombas with different behaviors
+            // Store game start time
+            gameStartTime = this.time.now;
 
-            // 1. CHASER - Red, actively chases Mario
-            const chaserGoomba = this.physics.add.sprite(300, 500, 'goomba').setScale(1.5);
-            chaserGoomba.setBounce(0.2);
-            chaserGoomba.setCollideWorldBounds(true);
-            chaserGoomba.setTint(0xFF0000); // Bright red
-            chaserGoomba.setData('type', 'chaser');
-            chaserGoomba.setData('jumpCooldown', 0);
-            goombas.push(chaserGoomba);
+            // Create THREE large unkillable Warios with different behaviors
+
+            // 1. CHASER - Red tint, actively chases Mario
+            const chaserWario = this.physics.add.sprite(300, 500, 'wario').setScale(0.15);
+            chaserWario.setBounce(0.2);
+            chaserWario.setCollideWorldBounds(true);
+            chaserWario.setTint(0xFF6666); // Red tint
+            chaserWario.setData('type', 'chaser');
+            chaserWario.setData('jumpCooldown', 0);
+            goombas.push(chaserWario);
 
             // 2. SHADOW - Dark purple, follows Mario's past path (prevents backtracking)
-            const shadowGoomba = this.physics.add.sprite(100, 500, 'goomba').setScale(1.5);
-            shadowGoomba.setBounce(0.2);
-            shadowGoomba.setCollideWorldBounds(true);
-            shadowGoomba.setTint(0x440066); // Dark purple
-            shadowGoomba.setAlpha(0.7); // Slightly transparent
-            shadowGoomba.setData('type', 'shadow');
-            shadowGoomba.setData('jumpCooldown', 0);
-            goombas.push(shadowGoomba);
+            const shadowWario = this.physics.add.sprite(100, 500, 'wario').setScale(0.15);
+            shadowWario.setBounce(0.2);
+            shadowWario.setCollideWorldBounds(true);
+            shadowWario.setTint(0x440066); // Dark purple
+            shadowWario.setAlpha(0); // Initially invisible - appears after 3 seconds
+            shadowWario.setData('type', 'shadow');
+            shadowWario.setData('jumpCooldown', 0);
+            shadowWario.setData('hasAppeared', false);
+            (shadowWario.body as Phaser.Physics.Arcade.Body).enable = false; // Disable collision initially
+            goombas.push(shadowWario);
 
-            // 3. LUNGER - Orange, stays at the top and lunges when Mario approaches
-            const lungerGoomba = this.physics.add.sprite(1000, 150, 'goomba').setScale(1.8);
-            lungerGoomba.setBounce(0.2);
-            lungerGoomba.setCollideWorldBounds(true);
-            lungerGoomba.setTint(0xFF6600); // Orange
-            lungerGoomba.setData('type', 'lunger');
-            lungerGoomba.setData('jumpCooldown', 0);
-            lungerGoomba.setData('isLunging', false);
-            lungerGoomba.setData('homeX', 1000);
-            lungerGoomba.setData('homeY', 150);
-            goombas.push(lungerGoomba);
+            // 3. LUNGER - Orange tint, stays at the top and lunges when Mario approaches
+            const lungerWario = this.physics.add.sprite(1000, 150, 'wario').setScale(0.18);
+            lungerWario.setBounce(0.2);
+            lungerWario.setCollideWorldBounds(true);
+            lungerWario.setTint(0xFF9933); // Orange tint
+            lungerWario.setData('type', 'lunger');
+            lungerWario.setData('jumpCooldown', 0);
+            lungerWario.setData('isLunging', false);
+            lungerWario.setData('homeX', 1000);
+            lungerWario.setData('homeY', 150);
+            goombas.push(lungerWario);
 
             // Create player
             player = this.physics.add.sprite(100, 500, 'mario');
@@ -350,11 +354,22 @@ const MarioGame12: React.FC = () => {
                 }
             }
 
-            // Update goombas based on their type
+            // Update Warios based on their type
             goombas.forEach(goomba => {
                 if (!player.getData('hasLost') && !player.getData('hasWon')) {
                     const goombaBody = goomba.body as Phaser.Physics.Arcade.Body;
                     const goombaType = goomba.getData('type');
+
+                    // Check if shadow should appear (after 3 seconds)
+                    if (goombaType === 'shadow' && !goomba.getData('hasAppeared')) {
+                        if (currentTime - gameStartTime >= SHADOW_APPEAR_DELAY) {
+                            goomba.setData('hasAppeared', true);
+                            goomba.setAlpha(0.7);
+                            (goomba.body as Phaser.Physics.Arcade.Body).enable = true;
+                        } else {
+                            return; // Skip shadow update until it appears
+                        }
+                    }
 
                     let jumpCooldown = goomba.getData('jumpCooldown') || 0;
                     jumpCooldown -= delta;

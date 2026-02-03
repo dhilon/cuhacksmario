@@ -50,13 +50,13 @@ const MarioGame10: React.FC = () => {
 
         // Fireball settings
         const FIREBALL_SPEED = 300;
-        const FIREBALL_SPAWN_INTERVAL = 800; // ms between fireballs
+        const FIREBALL_SPAWN_INTERVAL = 500; // ms between fireballs (2 per second)
 
         function preload(this: Phaser.Scene) {
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
             this.load.image('ground', 'https://labs.phaser.io/assets/platforms/grass-tile.png');
             this.load.image('flag', '/flag.png');
-            this.load.image('fireball', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlrfXtLLmtQT1pGc7k43chaiRIXVEUJUzGdg&s');
+            this.load.image('fireball', '/fireball.png');
             this.load.spritesheet('mario', '/mario.png', {
                 frameWidth: 40,
                 frameHeight: 40,

@@ -56,6 +56,7 @@ const MarioGame10: React.FC = () => {
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
             this.load.image('ground', 'https://labs.phaser.io/assets/platforms/grass-tile.png');
             this.load.image('flag', '/flag.png');
+            this.load.image('fireball', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlrfXtLLmtQT1pGc7k43chaiRIXVEUJUzGdg&s');
             this.load.spritesheet('mario', '/mario.png', {
                 frameWidth: 40,
                 frameHeight: 40,
@@ -206,9 +207,8 @@ const MarioGame10: React.FC = () => {
                     const spawnX = 400 + Math.random() * 900; // Spawn from middle-right
                     const spawnY = -20;
 
-                    const fireball = this.physics.add.sprite(spawnX, spawnY, 'star');
-                    fireball.setScale(0.8);
-                    fireball.setTint(0xFF4400); // Orange-red color
+                    const fireball = this.physics.add.sprite(spawnX, spawnY, 'fireball');
+                    fireball.setScale(0.3);
                     fireball.setAngle(-SLOPE_ANGLE);
                     (fireball.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 

@@ -44,6 +44,15 @@ const MarioGame11: React.FC = () => {
         let gravityInverted = true; // Start with inverted gravity (pulling UP)
         const GRAVITY_STRENGTH = 350;
 
+        // Gravity revert mechanic
+        let canUseGravityRevert = true;
+        let cooldownRemaining = 0;
+        let revertTimeRemaining = 0;
+        let isGravityReverted = false;
+        let cooldownText: Phaser.GameObjects.Text;
+        let revertText: Phaser.GameObjects.Text;
+        let keySpace: Phaser.Input.Keyboard.Key | undefined;
+
         function preload(this: Phaser.Scene) {
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
             this.load.image('ground', 'https://labs.phaser.io/assets/platforms/grass-tile.png');
@@ -69,6 +78,7 @@ const MarioGame11: React.FC = () => {
                 keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
                 keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
                 keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+                keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
             }
 
             sceneRef = this;
@@ -82,10 +92,10 @@ const MarioGame11: React.FC = () => {
                 const configs = [];
 
                 // Fixed starting platform at top-left (ceiling)
-                configs.push({ x: 100, y: 40, scaleX: 1.2, scaleY: 0.15, isGravitySwitcher: false, isFixed: true });
+                configs.push({ x: 100, y: 40, scaleX: 1.2, scaleY: 0.15, isFixed: true });
 
                 // Fixed flag platform at bottom-right
-                configs.push({ x: 1150, y: 570, scaleX: 0.2, scaleY: 0.1, isGravitySwitcher: false, isFixed: true });
+                configs.push({ x: 1150, y: 570, scaleX: 0.2, scaleY: 0.1, isFixed: true });
 
                 // Generate 18 random platforms spread across the screen
                 // Upper section (y: 60-200) - 6 platforms
@@ -95,7 +105,6 @@ const MarioGame11: React.FC = () => {
                         y: 60 + Math.random() * 140,
                         scaleX: 0.2 + Math.random() * 0.15,
                         scaleY: 0.08 + Math.random() * 0.04,
-                        isGravitySwitcher: Math.random() < 0.5, // 50% chance
                         isFixed: false,
                     });
                 }
@@ -107,7 +116,6 @@ const MarioGame11: React.FC = () => {
                         y: 220 + Math.random() * 160,
                         scaleX: 0.2 + Math.random() * 0.15,
                         scaleY: 0.08 + Math.random() * 0.04,
-                        isGravitySwitcher: Math.random() < 0.5,
                         isFixed: false,
                     });
                 }
@@ -119,7 +127,6 @@ const MarioGame11: React.FC = () => {
                         y: 400 + Math.random() * 140,
                         scaleX: 0.2 + Math.random() * 0.15,
                         scaleY: 0.08 + Math.random() * 0.04,
-                        isGravitySwitcher: Math.random() < 0.5,
                         isFixed: false,
                     });
                 }
@@ -135,18 +142,13 @@ const MarioGame11: React.FC = () => {
                 platform.setScale(config.scaleX, config.scaleY);
                 (platform.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
                 (platform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
-                platform.setData('isGravitySwitcher', config.isGravitySwitcher);
                 platform.setData('isFixed', config.isFixed);
-                platform.setData('originalX', config.x);
-                platform.setData('originalY', config.y);
 
-                // Purple = gravity switcher, Orange = normal
-                if (config.isGravitySwitcher) {
-                    platform.setTint(0xFFFFFF); // Purple - switches gravity
-                } else if (config.isFixed) {
-                    platform.setTint(0x66FF66); // Green for start/flag platforms
+                // Green for start/flag platforms, purple for others
+                if (config.isFixed) {
+                    platform.setTint(0x66FF66);
                 } else {
-                    platform.setTint(0xFFCC99); // Orange - normal
+                    platform.setTint(0xCC99FF);
                 }
                 platforms.push(platform);
             });
@@ -159,16 +161,13 @@ const MarioGame11: React.FC = () => {
                         const config = newConfigs[index];
                         platform.setPosition(config.x, config.y);
                         platform.setScale(config.scaleX, config.scaleY);
-                        platform.setData('isGravitySwitcher', config.isGravitySwitcher);
                         platform.setData('isFixed', config.isFixed);
                         (platform.body as Phaser.Physics.Arcade.Body).enable = true;
 
-                        if (config.isGravitySwitcher) {
-                            platform.setTint(0xFFFFFF);
-                        } else if (config.isFixed) {
+                        if (config.isFixed) {
                             platform.setTint(0x66FF66);
                         } else {
-                            platform.setTint(0xFFCC99);
+                            platform.setTint(0xCC99FF);
                         }
                     }
                 });
@@ -207,31 +206,22 @@ const MarioGame11: React.FC = () => {
                 repeat: -1,
             });
 
-            // Colliders with gravity switch detection
+            // Colliders
             platforms.forEach(platform => {
-                this.physics.add.collider(player, platform, () => {
-                    // Check if this is a gravity-switching platform
-                    if (platform.getData('isGravitySwitcher')) {
-                        const body = player.body as Phaser.Physics.Arcade.Body;
-                        const isOnTop = gravityInverted ? body.blocked.up : body.blocked.down;
+                this.physics.add.collider(player, platform);
+            });
 
-                        if (isOnTop) {
-                            // Switch gravity!
-                            gravityInverted = !gravityInverted;
-                            const newGravity = gravityInverted ? -GRAVITY_STRENGTH : GRAVITY_STRENGTH;
-                            this.physics.world.gravity.y = newGravity;
+            // Add UI text for gravity revert
+            cooldownText = this.add.text(20, 20, 'Press SPACE for normal gravity!', {
+                fontSize: '18px',
+                color: '#00ff00',
+                fontFamily: 'Arial',
+            });
 
-                            // Flip Mario
-                            player.setFlipY(gravityInverted);
-
-                            // Visual feedback - flash the platform yellow then back to white
-                            platform.setTint(0xFFFF00);
-                            this.time.delayedCall(100, () => {
-                                platform.setTint(0xFFFFFF);
-                            });
-                        }
-                    }
-                });
+            revertText = this.add.text(20, 50, '', {
+                fontSize: '24px',
+                color: '#ffff00',
+                fontFamily: 'Arial',
             });
 
             // Flag overlap
@@ -271,6 +261,10 @@ const MarioGame11: React.FC = () => {
                             // Randomize platforms and reset gravity for next attempt
                             (this as any).randomizePlatforms();
                             gravityInverted = true;
+                            isGravityReverted = false;
+                            canUseGravityRevert = true;
+                            cooldownRemaining = 0;
+                            revertTimeRemaining = 0;
                             this.physics.world.gravity.y = -GRAVITY_STRENGTH;
                         }
                     }
@@ -278,13 +272,13 @@ const MarioGame11: React.FC = () => {
             );
 
             // Add hints
-            this.add.text(600, 560, 'Controls INVERTED! White platforms SWITCH GRAVITY!', {
+            this.add.text(600, 560, 'Controls INVERTED! Press SPACE for random normal gravity (1-5 sec)', {
                 fontSize: '16px',
                 color: '#ffcc00',
                 fontFamily: 'Arial',
             }).setOrigin(0.5, 0.5);
 
-            this.add.text(600, 580, 'Green = Start/Flag | White = Gravity Switch | Orange = Normal', {
+            this.add.text(600, 580, '15 second cooldown after use', {
                 fontSize: '12px',
                 color: '#aaaaaa',
                 fontFamily: 'Arial',
@@ -292,9 +286,59 @@ const MarioGame11: React.FC = () => {
         }
 
         function update(this: Phaser.Scene) {
+            const delta = this.game.loop.delta / 1000; // Convert to seconds
+
+            // Update cooldown timer
+            if (cooldownRemaining > 0) {
+                cooldownRemaining -= delta;
+                if (cooldownRemaining <= 0) {
+                    cooldownRemaining = 0;
+                    canUseGravityRevert = true;
+                    cooldownText.setText('Press SPACE for normal gravity!');
+                    cooldownText.setColor('#00ff00');
+                } else {
+                    cooldownText.setText(`Cooldown: ${Math.ceil(cooldownRemaining)}s`);
+                    cooldownText.setColor('#ff6666');
+                }
+            }
+
+            // Update gravity revert timer
+            if (isGravityReverted && revertTimeRemaining > 0) {
+                revertTimeRemaining -= delta;
+                revertText.setText(`Normal gravity: ${Math.ceil(revertTimeRemaining)}s`);
+
+                if (revertTimeRemaining <= 0) {
+                    // Revert back to inverted gravity
+                    isGravityReverted = false;
+                    gravityInverted = true;
+                    this.physics.world.gravity.y = -GRAVITY_STRENGTH;
+                    player.setFlipY(true);
+                    revertText.setText('');
+                }
+            }
+
             if (!player.body || player.getData('hasLost') || player.getData('hasWon')) return;
 
             const body = player.body as Phaser.Physics.Arcade.Body;
+
+            // Check for spacebar to activate gravity revert
+            if (keySpace?.isDown && canUseGravityRevert && !isGravityReverted) {
+                // Random 1-5 seconds
+                const duration = Math.floor(Math.random() * 5) + 1;
+                revertTimeRemaining = duration;
+                isGravityReverted = true;
+                canUseGravityRevert = false;
+                cooldownRemaining = 15; // 15 second cooldown
+
+                // Switch to normal gravity
+                gravityInverted = false;
+                this.physics.world.gravity.y = GRAVITY_STRENGTH;
+                player.setFlipY(false);
+
+                revertText.setText(`Normal gravity: ${duration}s`);
+                cooldownText.setText(`Cooldown: 15s`);
+                cooldownText.setColor('#ff6666');
+            }
 
             if (cursors) {
                 // INVERTED CONTROLS - left is right, right is left

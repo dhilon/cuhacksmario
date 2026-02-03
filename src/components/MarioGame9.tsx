@@ -374,8 +374,8 @@ const MarioGame9: React.FC = () => {
                         <strong>Level 9: Ice Platforms</strong>
                     </div>
                     <div style={{ marginTop: '20px' }}>
-                        <button className="button" onClick={() => navigate('game')}>
-                            <p className="p2">1st level</p>
+                        <button className="button" onClick={() => navigate('game10')}>
+                            <p className="p2">10th level</p>
                         </button>
                     </div>
                 </div>

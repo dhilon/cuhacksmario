@@ -10,6 +10,9 @@ import MarioGame6 from "./components/MarioGame6";
 import MarioGame7 from "./components/MarioGame7";
 import MarioGame8 from "./components/MarioGame8";
 import MarioGame9 from "./components/MarioGame9";
+import MarioGame10 from "./components/MarioGame10";
+import MarioGame11 from "./components/MarioGame11";
+import MarioGame12 from "./components/MarioGame12";
 
 export default function App() {
   return (
@@ -26,6 +29,9 @@ export default function App() {
         <Route path="/game7" component={MarioGame7} />
         <Route path="/game8" component={MarioGame8} />
         <Route path="/game9" component={MarioGame9} />
+        <Route path="/game10" component={MarioGame10} />
+        <Route path="/game11" component={MarioGame11} />
+        <Route path="/game12" component={MarioGame12} />
         <Route path="/AI" component={MarioAI} />
       </Switch>
     </Router>

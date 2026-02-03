@@ -94,25 +94,42 @@ const MarioGame8: React.FC = () => {
             (startPlatform.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
             (startPlatform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
 
-            // Create crumbling platforms - staircase pattern going right then left
-            // Added two flag platforms in top corners
-            const platformConfigs = [
-                { x: 150, y: 480, standTime: 900, respawnTime: 5000 },
-                { x: 350, y: 440, standTime: 700, respawnTime: 4000 },
-                { x: 580, y: 400, standTime: 800, respawnTime: 5000 },
-                { x: 820, y: 450, standTime: 600, respawnTime: 4500 },
-                { x: 1050, y: 400, standTime: 750, respawnTime: 3500 },
-                { x: 1150, y: 340, standTime: 850, respawnTime: 5000 },
-                { x: 920, y: 300, standTime: 650, respawnTime: 4000 },
-                { x: 680, y: 260, standTime: 800, respawnTime: 4500 },
-                { x: 450, y: 300, standTime: 700, respawnTime: 5000 },
-                { x: 200, y: 250, standTime: 550, respawnTime: 4000 },
-                { x: 80, y: 190, standTime: 900, respawnTime: 4500 },
-                { x: 300, y: 140, standTime: 650, respawnTime: 5000 },
-                { x: 550, y: 160, standTime: 750, respawnTime: 4000 },
-                { x: 30, y: 60, standTime: 1200, respawnTime: 6000 },  // Top left flag platform
-                { x: 1170, y: 60, standTime: 1200, respawnTime: 6000 }, // Top right flag platform
-            ];
+            // Function to generate random platforms
+            // 4 platforms in middle (x=500-900), 11 platforms on sides (x<500 or x>900)
+            // Plus 2 fixed flag platforms
+            function generateRandomPlatforms() {
+                const configs = [];
+
+                // 4 platforms in the middle section (x=500-900)
+                for (let i = 0; i < 4; i++) {
+                    configs.push({
+                        x: 500 + Math.random() * 400, // x between 500-900
+                        y: 80 + Math.random() * 420, // y between 80-500
+                        standTime: 600 + Math.random() * 600,
+                        isFixed: false,
+                    });
+                }
+
+                // 11 platforms on the sides (x<500 or x>900)
+                for (let i = 0; i < 11; i++) {
+                    const onLeft = Math.random() > 0.5;
+                    configs.push({
+                        x: onLeft ? (50 + Math.random() * 400) : (950 + Math.random() * 200), // left: 50-450, right: 950-1150
+                        y: 80 + Math.random() * 420, // y between 80-500
+                        standTime: 600 + Math.random() * 600,
+                        isFixed: false,
+                    });
+                }
+
+                // 2 fixed flag platforms (always same position)
+                configs.push({ x: 30, y: 60, standTime: 1200, isFixed: true });  // Top left flag platform
+                configs.push({ x: 1170, y: 60, standTime: 1200, isFixed: true }); // Top right flag platform
+
+                return configs;
+            }
+
+            // Create initial platforms
+            let platformConfigs = generateRandomPlatforms();
 
             platformConfigs.forEach((config) => {
                 const platform = this.physics.add.sprite(config.x, config.y, 'ground').setScale(0.12);
@@ -121,13 +138,47 @@ const MarioGame8: React.FC = () => {
                 platform.setData('originalX', config.x);
                 platform.setData('originalY', config.y);
                 platform.setData('standTime', config.standTime);
-                platform.setData('respawnTime', config.respawnTime);
                 platform.setData('playerStandingTime', 0);
                 platform.setData('isCrumbling', false);
                 platform.setData('hasFallen', false);
-                platform.setTint(0xFFAA66); // Orange tint to indicate crumbling
+                platform.setData('isFixed', config.isFixed);
+                // Flag platforms are not tinted orange
+                if (!config.isFixed) {
+                    platform.setTint(0xFFAA66); // Orange tint to indicate crumbling
+                }
                 crumblingPlatforms.push(platform);
             });
+
+            // Function to randomize and respawn all platforms
+            function randomizeAndRespawnPlatforms() {
+                const newConfigs = generateRandomPlatforms();
+                crumblingPlatforms.forEach((platform, index) => {
+                    const config = newConfigs[index];
+                    platform.setPosition(config.x, config.y);
+                    platform.setRotation(0);
+                    platform.setAlpha(1);
+                    platform.setVelocity(0, 0);
+                    (platform.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+                    (platform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
+                    (platform.body as Phaser.Physics.Arcade.Body).enable = true;
+                    platform.setData('originalX', config.x);
+                    platform.setData('originalY', config.y);
+                    platform.setData('standTime', config.standTime);
+                    platform.setData('playerStandingTime', 0);
+                    platform.setData('isCrumbling', false);
+                    platform.setData('hasFallen', false);
+                    platform.setData('hasBeenTouched', false);
+                    // Flag platforms keep default tint, others get orange
+                    if (!config.isFixed) {
+                        platform.setTint(0xFFAA66);
+                    } else {
+                        platform.clearTint();
+                    }
+                });
+            }
+
+            // Store function for use in death handler
+            (this as any).randomizeAndRespawnPlatforms = randomizeAndRespawnPlatforms;
 
             // Create two flags - one in each top corner bordering the edges
             const flagLeft = this.physics.add.sprite(30, 40, 'flag').setScale(0.15);
@@ -170,6 +221,11 @@ const MarioGame8: React.FC = () => {
             // Collider: player vs. start platform
             this.physics.add.collider(player, startPlatform);
 
+            // Collider: player vs. crumbling platforms
+            crumblingPlatforms.forEach(platform => {
+                this.physics.add.collider(player, platform);
+            });
+
             // Schedule start platform to crumble after 7 seconds
             this.time.delayedCall(7000, () => {
                 startPlatform.setTint(0xFF4444);
@@ -187,10 +243,6 @@ const MarioGame8: React.FC = () => {
                 });
             });
 
-            // Collider: player vs. crumbling platforms
-            crumblingPlatforms.forEach(platform => {
-                this.physics.add.collider(player, platform);
-            });
 
             // Overlap: player vs. left flag
             this.physics.add.overlap(player, flagLeft, () => {
@@ -290,6 +342,9 @@ const MarioGame8: React.FC = () => {
                                     fontFamily: 'Arial',
                                 })
                                 .setOrigin(0.5, 0.5);
+
+                            // Randomize and respawn all crumbling platforms on death
+                            (this as any).randomizeAndRespawnPlatforms(this);
                         }
                     }
                 }
@@ -308,31 +363,6 @@ const MarioGame8: React.FC = () => {
             const verticalTouch = Math.abs(playerBounds.bottom - platformBounds.top) < 15;
 
             return player.body.blocked.down && horizontalOverlap && verticalTouch;
-        }
-
-        function respawnPlatform(platform: Phaser.Physics.Arcade.Sprite) {
-            const originalX = platform.getData('originalX');
-            const originalY = platform.getData('originalY');
-
-            platform.setPosition(originalX, originalY);
-            platform.setRotation(0);
-            platform.setAlpha(0);
-            platform.setVelocity(0, 0);
-            (platform.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-            (platform.body as Phaser.Physics.Arcade.Body).setImmovable(true);
-            (platform.body as Phaser.Physics.Arcade.Body).enable = true;
-            platform.setData('playerStandingTime', 0);
-            platform.setData('isCrumbling', false);
-            platform.setData('hasFallen', false);
-            platform.setData('hasBeenTouched', false);
-            platform.setTint(0xFFAA66);
-
-            // Fade in
-            sceneRef.tweens.add({
-                targets: platform,
-                alpha: 1,
-                duration: 500,
-            });
         }
 
         function update(this: Phaser.Scene) {
@@ -370,12 +400,7 @@ const MarioGame8: React.FC = () => {
                                 onComplete: () => {
                                     platform.setData('hasFallen', true);
                                     (platform.body as Phaser.Physics.Arcade.Body).enable = false;
-
-                                    // Schedule respawn
-                                    const respawnTime = platform.getData('respawnTime');
-                                    this.time.delayedCall(respawnTime, () => {
-                                        respawnPlatform(platform);
-                                    });
+                                    // Platforms stay fallen until player dies
                                 }
                             });
                         });

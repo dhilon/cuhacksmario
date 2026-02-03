@@ -156,8 +156,8 @@ const MarioGame12: React.FC = () => {
             chaserWario.setData('jumpCooldown', 0);
             goombas.push(chaserWario);
 
-            // 2. SHADOW - Dark purple, follows Mario's past path (starts top right)
-            const shadowWario = this.physics.add.sprite(1170, 20, 'wario').setScale(0.35);
+            // 2. SHADOW - Dark purple, follows Mario's past path (starts where Mario starts, after 3 seconds)
+            const shadowWario = this.physics.add.sprite(100, 500, 'wario').setScale(0.35);
             shadowWario.setBounce(0.2);
             shadowWario.setCollideWorldBounds(true);
             shadowWario.setTint(0x440066); // Dark purple

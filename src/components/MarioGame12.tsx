@@ -175,9 +175,10 @@ const MarioGame12: React.FC = () => {
             lungerWario.setTint(0xFF9933); // Orange tint
             lungerWario.setData('type', 'lunger');
             lungerWario.setData('jumpCooldown', 0);
-            lungerWario.setData('isLunging', false);
+            lungerWario.setData('lungerState', 'waiting'); // waiting, lunging, grounded, climbing
             lungerWario.setData('homeX', 1150);
             lungerWario.setData('homeY', 80);
+            lungerWario.setData('groundedTime', 0);
             goombas.push(lungerWario);
 
             // Create player
@@ -400,52 +401,78 @@ const MarioGame12: React.FC = () => {
                         }
 
                     } else if (goombaType === 'lunger') {
-                        // LUNGER: Stays at top, lunges when Mario gets close
+                        // LUNGER: Stays at flag platform, lunges when Mario gets close, then climbs back up
                         const dx = player.x - goomba.x;
                         const dy = player.y - goomba.y;
                         const distToPlayer = Math.sqrt(dx * dx + dy * dy);
-                        const isLunging = goomba.getData('isLunging');
+                        const lungerState = goomba.getData('lungerState');
                         const homeX = goomba.getData('homeX');
                         const homeY = goomba.getData('homeY');
 
-                        if (!isLunging) {
-                            // Wait at home position, watching for Mario
-                            const dxHome = homeX - goomba.x;
+                        if (lungerState === 'waiting') {
+                            // Stay on flag platform, wait for Mario
+                            goomba.setVelocityX(0);
 
-                            // Slowly return to home if not there
-                            if (Math.abs(dxHome) > 10) {
-                                goomba.setVelocityX(dxHome > 0 ? 30 : -30);
+                            // Keep on platform
+                            if (goomba.y > homeY + 20) {
+                                goomba.setPosition(homeX, homeY);
+                                (goomba.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+                            }
+
+                            // LUNGE if Mario gets within range
+                            if (distToPlayer < 250) {
+                                goomba.setData('lungerState', 'lunging');
+                                (goomba.body as Phaser.Physics.Arcade.Body).setAllowGravity(true);
+                                // Dramatic lunge towards Mario!
+                                const lungeSpeed = 300;
+                                const angle = Math.atan2(dy, dx);
+                                goomba.setVelocityX(Math.cos(angle) * lungeSpeed);
+                                goomba.setVelocityY(Math.sin(angle) * lungeSpeed);
+                            }
+
+                        } else if (lungerState === 'lunging') {
+                            // Falling/lunging - check if hit ground
+                            if (goombaBody.blocked.down && goomba.y > 500) {
+                                goomba.setData('lungerState', 'grounded');
+                                goomba.setData('groundedTime', currentTime);
+                                goomba.setVelocityX(0);
+                            }
+
+                        } else if (lungerState === 'grounded') {
+                            // On ground, wait 5 seconds then climb back up
+                            const groundedTime = goomba.getData('groundedTime');
+                            goomba.setVelocityX(0);
+
+                            if (currentTime - groundedTime >= 5000) {
+                                goomba.setData('lungerState', 'climbing');
+                            }
+
+                        } else if (lungerState === 'climbing') {
+                            // Climb back up to the flag platform
+                            (goomba.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+
+                            const dxHome = homeX - goomba.x;
+                            const dyHome = homeY - goomba.y;
+
+                            // Move towards home position
+                            const climbSpeed = 100;
+                            if (Math.abs(dxHome) > 5) {
+                                goomba.setVelocityX(dxHome > 0 ? climbSpeed : -climbSpeed);
                             } else {
                                 goomba.setVelocityX(0);
                             }
 
-                            // LUNGE if Mario gets within range (top area of screen)
-                            if (player.y < 250 && distToPlayer < 300) {
-                                goomba.setData('isLunging', true);
-                                // Dramatic lunge!
-                                const lungeSpeed = 250;
-                                const angle = Math.atan2(dy, dx);
-                                goomba.setVelocityX(Math.cos(angle) * lungeSpeed);
-                                goomba.setVelocityY(Math.sin(angle) * lungeSpeed - 100);
-                            }
-                        } else {
-                            // Currently lunging - chase aggressively
-                            const lungeChaseSpeed = 180;
-                            if (dx > 10) {
-                                goomba.setVelocityX(lungeChaseSpeed);
-                            } else if (dx < -10) {
-                                goomba.setVelocityX(-lungeChaseSpeed);
+                            if (Math.abs(dyHome) > 5) {
+                                goomba.setVelocityY(dyHome > 0 ? climbSpeed : -climbSpeed);
+                            } else {
+                                goomba.setVelocityY(0);
                             }
 
-                            // Jump if needed
-                            if (dy < -30 && goombaBody.blocked.down && jumpCooldown <= 0) {
-                                goomba.setVelocityY(-380);
-                                goomba.setData('jumpCooldown', 500);
-                            }
-
-                            // Return to waiting if Mario goes back down
-                            if (player.y > 350) {
-                                goomba.setData('isLunging', false);
+                            // Reached home - back to waiting
+                            if (Math.abs(dxHome) <= 5 && Math.abs(dyHome) <= 5) {
+                                goomba.setPosition(homeX, homeY);
+                                goomba.setVelocity(0, 0);
+                                goomba.setData('lungerState', 'waiting');
                             }
                         }
                     }

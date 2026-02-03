@@ -91,7 +91,7 @@ const MarioGame12: React.FC = () => {
             // Bottom floor - spans entire width
             platforms.create(600, 585, 'ground').setScale(8, 0.5).refreshBody();
             // Flag platform
-            platforms.create(1150, 150, 'ground').setScale(0.3).refreshBody();
+            platforms.create(1150, 225, 'ground').setScale(0.3).refreshBody();
 
             // Create moving platforms
             const movingConfigs = [
@@ -138,7 +138,7 @@ const MarioGame12: React.FC = () => {
             });
 
             // Create flag
-            const flag = this.physics.add.sprite(1150, 130, 'flag').setScale(0.2);
+            const flag = this.physics.add.sprite(1150, 205, 'flag').setScale(0.2);
             flag.setOrigin(0.5, 1);
             (flag.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 
@@ -148,7 +148,7 @@ const MarioGame12: React.FC = () => {
             // Create THREE large unkillable Warios with different behaviors
 
             // 1. CHASER - Red tint, actively chases Mario (starts at flag)
-            const chaserWario = this.physics.add.sprite(1100, 100, 'wario').setScale(0.35);
+            const chaserWario = this.physics.add.sprite(1100, 175, 'wario').setScale(0.35);
             chaserWario.setBounce(0.2);
             chaserWario.setCollideWorldBounds(true);
             chaserWario.setTint(0xFF6666); // Red tint
@@ -169,7 +169,7 @@ const MarioGame12: React.FC = () => {
             goombas.push(shadowWario);
 
             // 3. LUNGER - Orange tint, stays at the top and lunges when Mario approaches (starts at flag)
-            const lungerWario = this.physics.add.sprite(1150, 100, 'wario').setScale(0.35);
+            const lungerWario = this.physics.add.sprite(1150, 175, 'wario').setScale(0.35);
             lungerWario.setBounce(0.2);
             lungerWario.setCollideWorldBounds(true);
             lungerWario.setTint(0xFF9933); // Orange tint
@@ -177,7 +177,7 @@ const MarioGame12: React.FC = () => {
             lungerWario.setData('jumpCooldown', 0);
             lungerWario.setData('lungerState', 'waiting'); // waiting, lunging, grounded, climbing
             lungerWario.setData('homeX', 1150);
-            lungerWario.setData('homeY', 100);
+            lungerWario.setData('homeY', 175);
             lungerWario.setData('groundedTime', 0);
             goombas.push(lungerWario);
 

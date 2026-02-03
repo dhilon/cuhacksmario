@@ -148,7 +148,7 @@ const MarioGame12: React.FC = () => {
             // Create THREE large unkillable Warios with different behaviors
 
             // 1. CHASER - Red tint, actively chases Mario (starts at flag)
-            const chaserWario = this.physics.add.sprite(1100, 130, 'wario').setScale(0.35);
+            const chaserWario = this.physics.add.sprite(1100, 100, 'wario').setScale(0.35);
             chaserWario.setBounce(0.2);
             chaserWario.setCollideWorldBounds(true);
             chaserWario.setTint(0xFF6666); // Red tint
@@ -169,7 +169,7 @@ const MarioGame12: React.FC = () => {
             goombas.push(shadowWario);
 
             // 3. LUNGER - Orange tint, stays at the top and lunges when Mario approaches (starts at flag)
-            const lungerWario = this.physics.add.sprite(1150, 130, 'wario').setScale(0.35);
+            const lungerWario = this.physics.add.sprite(1150, 100, 'wario').setScale(0.35);
             lungerWario.setBounce(0.2);
             lungerWario.setCollideWorldBounds(true);
             lungerWario.setTint(0xFF9933); // Orange tint
@@ -177,7 +177,7 @@ const MarioGame12: React.FC = () => {
             lungerWario.setData('jumpCooldown', 0);
             lungerWario.setData('lungerState', 'waiting'); // waiting, lunging, grounded, climbing
             lungerWario.setData('homeX', 1150);
-            lungerWario.setData('homeY', 130);
+            lungerWario.setData('homeY', 100);
             lungerWario.setData('groundedTime', 0);
             goombas.push(lungerWario);
 

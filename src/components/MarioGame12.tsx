@@ -147,8 +147,8 @@ const MarioGame12: React.FC = () => {
 
             // Create THREE large unkillable Warios with different behaviors
 
-            // 1. CHASER - Red tint, actively chases Mario (starts at flag)
-            const chaserWario = this.physics.add.sprite(1100, 175, 'wario').setScale(0.35);
+            // 1. CHASER - Red tint, actively chases Mario (starts top right)
+            const chaserWario = this.physics.add.sprite(1150, 20, 'wario').setScale(0.35);
             chaserWario.setBounce(0.2);
             chaserWario.setCollideWorldBounds(true);
             chaserWario.setTint(0xFF6666); // Red tint
@@ -156,8 +156,8 @@ const MarioGame12: React.FC = () => {
             chaserWario.setData('jumpCooldown', 0);
             goombas.push(chaserWario);
 
-            // 2. SHADOW - Dark purple, follows Mario's past path (prevents backtracking)
-            const shadowWario = this.physics.add.sprite(100, 500, 'wario').setScale(0.35);
+            // 2. SHADOW - Dark purple, follows Mario's past path (starts top right)
+            const shadowWario = this.physics.add.sprite(1170, 20, 'wario').setScale(0.35);
             shadowWario.setBounce(0.2);
             shadowWario.setCollideWorldBounds(true);
             shadowWario.setTint(0x440066); // Dark purple
@@ -168,16 +168,17 @@ const MarioGame12: React.FC = () => {
             (shadowWario.body as Phaser.Physics.Arcade.Body).enable = false; // Disable collision initially
             goombas.push(shadowWario);
 
-            // 3. LUNGER - Orange tint, stays at the top and lunges when Mario approaches (starts at flag)
-            const lungerWario = this.physics.add.sprite(1150, 175, 'wario').setScale(0.35);
+            // 3. LUNGER - Orange tint, stays at the top and lunges when Mario approaches (starts top right)
+            const lungerWario = this.physics.add.sprite(1180, 20, 'wario').setScale(0.35);
             lungerWario.setBounce(0.2);
             lungerWario.setCollideWorldBounds(true);
             lungerWario.setTint(0xFF9933); // Orange tint
             lungerWario.setData('type', 'lunger');
             lungerWario.setData('jumpCooldown', 0);
-            lungerWario.setData('lungerState', 'waiting'); // waiting, lunging, grounded, climbing
+            lungerWario.setData('lungerState', 'falling'); // Start falling to find the flag platform
             lungerWario.setData('homeX', 1150);
             lungerWario.setData('homeY', 175);
+            (lungerWario.body as Phaser.Physics.Arcade.Body).setAllowGravity(true);
             lungerWario.setData('groundedTime', 0);
             goombas.push(lungerWario);
 
@@ -409,7 +410,15 @@ const MarioGame12: React.FC = () => {
                         const homeX = goomba.getData('homeX');
                         const homeY = goomba.getData('homeY');
 
-                        if (lungerState === 'waiting') {
+                        if (lungerState === 'falling') {
+                            // Initial fall from top right - wait until landing near flag platform
+                            if (goombaBody.blocked.down && Math.abs(goomba.x - homeX) < 100) {
+                                goomba.setData('lungerState', 'waiting');
+                                (goomba.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+                                goomba.setPosition(homeX, homeY);
+                            }
+
+                        } else if (lungerState === 'waiting') {
                             // Stay on flag platform, wait for Mario
                             goomba.setVelocityX(0);
 

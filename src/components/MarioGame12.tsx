@@ -62,7 +62,7 @@ const MarioGame12: React.FC = () => {
                 frameWidth: 40,
                 frameHeight: 40,
             });
-            this.load.image('wario', 'https://static.wikia.nocookie.net/mario/images/9/93/MPSWario.png/revision/latest?cb=20220815164105');
+            this.load.image('wario', '/wario.png');
         }
 
         function create(this: Phaser.Scene) {

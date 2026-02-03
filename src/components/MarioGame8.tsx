@@ -131,8 +131,8 @@ const MarioGame8: React.FC = () => {
                 }
 
                 // 2 fixed flag platforms (always same position)
-                configs.push({ x: 30, y: 60, standTime: 1200, isFixed: true });  // Top left flag platform
-                configs.push({ x: 1170, y: 60, standTime: 1200, isFixed: true }); // Top right flag platform
+                configs.push({ x: 30, y: 110, standTime: 1200, isFixed: true });  // Top left flag platform
+                configs.push({ x: 1170, y: 110, standTime: 1200, isFixed: true }); // Top right flag platform
 
                 return configs;
             }
@@ -190,11 +190,11 @@ const MarioGame8: React.FC = () => {
             (this as any).randomizeAndRespawnPlatforms = randomizeAndRespawnPlatforms;
 
             // Create two flags - one in each top corner bordering the edges
-            const flagLeft = this.physics.add.sprite(30, 40, 'flag').setScale(0.15);
+            const flagLeft = this.physics.add.sprite(30, 90, 'flag').setScale(0.15);
             flagLeft.setOrigin(0.5, 1);
             (flagLeft.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 
-            const flagRight = this.physics.add.sprite(1170, 40, 'flag').setScale(0.15);
+            const flagRight = this.physics.add.sprite(1170, 90, 'flag').setScale(0.15);
             flagRight.setOrigin(0.5, 1);
             (flagRight.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 

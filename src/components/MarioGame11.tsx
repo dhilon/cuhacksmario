@@ -44,14 +44,9 @@ const MarioGame11: React.FC = () => {
         let gravityInverted = true; // Start with inverted gravity (pulling UP)
         const GRAVITY_STRENGTH = 350;
 
-        // Gravity revert mechanic
-        let canUseGravityRevert = true;
-        let cooldownRemaining = 0;
-        let revertTimeRemaining = 0;
-        let isGravityReverted = false;
-        let cooldownText: Phaser.GameObjects.Text;
-        let revertText: Phaser.GameObjects.Text;
-        let keySpace: Phaser.Input.Keyboard.Key | undefined;
+        // Gravity switch mechanic - automatic every 4-8 seconds
+        let nextSwitchTime = 0;
+        let timeSinceLastSwitch = 0;
 
         function preload(this: Phaser.Scene) {
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
@@ -78,7 +73,6 @@ const MarioGame11: React.FC = () => {
                 keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
                 keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
                 keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-                keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
             }
 
             sceneRef = this;
@@ -211,18 +205,9 @@ const MarioGame11: React.FC = () => {
                 this.physics.add.collider(player, platform);
             });
 
-            // Add UI text for gravity revert
-            cooldownText = this.add.text(20, 20, 'Press SPACE for normal gravity!', {
-                fontSize: '18px',
-                color: '#00ff00',
-                fontFamily: 'Arial',
-            });
-
-            revertText = this.add.text(20, 50, '', {
-                fontSize: '24px',
-                color: '#ffff00',
-                fontFamily: 'Arial',
-            });
+            // Set initial gravity switch timer (4-8 seconds)
+            nextSwitchTime = 4 + Math.random() * 4;
+            timeSinceLastSwitch = 0;
 
             // Flag overlap
             this.physics.add.overlap(player, flag, () => {
@@ -261,10 +246,8 @@ const MarioGame11: React.FC = () => {
                             // Randomize platforms and reset gravity for next attempt
                             (this as any).randomizePlatforms();
                             gravityInverted = true;
-                            isGravityReverted = false;
-                            canUseGravityRevert = true;
-                            cooldownRemaining = 0;
-                            revertTimeRemaining = 0;
+                            timeSinceLastSwitch = 0;
+                            nextSwitchTime = 4 + Math.random() * 4;
                             this.physics.world.gravity.y = -GRAVITY_STRENGTH;
                         }
                     }
@@ -272,15 +255,9 @@ const MarioGame11: React.FC = () => {
             );
 
             // Add hints
-            this.add.text(600, 560, 'Controls INVERTED! Press SPACE for random normal gravity (1-5 sec)', {
+            this.add.text(600, 570, 'Controls INVERTED! Gravity switches automatically every 4-8 seconds', {
                 fontSize: '16px',
                 color: '#ffcc00',
-                fontFamily: 'Arial',
-            }).setOrigin(0.5, 0.5);
-
-            this.add.text(600, 580, '15 second cooldown after use', {
-                fontSize: '12px',
-                color: '#aaaaaa',
                 fontFamily: 'Arial',
             }).setOrigin(0.5, 0.5);
         }
@@ -288,57 +265,29 @@ const MarioGame11: React.FC = () => {
         function update(this: Phaser.Scene) {
             const delta = this.game.loop.delta / 1000; // Convert to seconds
 
-            // Update cooldown timer
-            if (cooldownRemaining > 0) {
-                cooldownRemaining -= delta;
-                if (cooldownRemaining <= 0) {
-                    cooldownRemaining = 0;
-                    canUseGravityRevert = true;
-                    cooldownText.setText('Press SPACE for normal gravity!');
-                    cooldownText.setColor('#00ff00');
-                } else {
-                    cooldownText.setText(`Cooldown: ${Math.ceil(cooldownRemaining)}s`);
-                    cooldownText.setColor('#ff6666');
-                }
-            }
-
-            // Update gravity revert timer
-            if (isGravityReverted && revertTimeRemaining > 0) {
-                revertTimeRemaining -= delta;
-                revertText.setText(`Normal gravity: ${Math.ceil(revertTimeRemaining)}s`);
-
-                if (revertTimeRemaining <= 0) {
-                    // Revert back to inverted gravity
-                    isGravityReverted = false;
-                    gravityInverted = true;
-                    this.physics.world.gravity.y = -GRAVITY_STRENGTH;
-                    player.setFlipY(true);
-                    revertText.setText('');
-                }
-            }
-
             if (!player.body || player.getData('hasLost') || player.getData('hasWon')) return;
 
-            const body = player.body as Phaser.Physics.Arcade.Body;
+            // Update gravity switch timer
+            timeSinceLastSwitch += delta;
 
-            // Check for spacebar to activate gravity revert
-            if (keySpace?.isDown && canUseGravityRevert && !isGravityReverted) {
-                // Random 1-5 seconds
-                const duration = Math.floor(Math.random() * 5) + 1;
-                revertTimeRemaining = duration;
-                isGravityReverted = true;
-                canUseGravityRevert = false;
-                cooldownRemaining = 15; // 15 second cooldown
+            // Check if it's time to switch gravity
+            if (timeSinceLastSwitch >= nextSwitchTime) {
+                // Toggle gravity
+                gravityInverted = !gravityInverted;
+                if (gravityInverted) {
+                    this.physics.world.gravity.y = -GRAVITY_STRENGTH;
+                    player.setFlipY(true);
+                } else {
+                    this.physics.world.gravity.y = GRAVITY_STRENGTH;
+                    player.setFlipY(false);
+                }
 
-                // Switch to normal gravity
-                gravityInverted = false;
-                this.physics.world.gravity.y = GRAVITY_STRENGTH;
-                player.setFlipY(false);
-
-                revertText.setText(`Normal gravity: ${duration}s`);
-                cooldownText.setText(`Cooldown: 15s`);
-                cooldownText.setColor('#ff6666');
+                // Reset timer with new random interval (4-8 seconds)
+                timeSinceLastSwitch = 0;
+                nextSwitchTime = 4 + Math.random() * 4;
             }
+
+            const body = player.body as Phaser.Physics.Arcade.Body;
 
             if (cursors) {
                 // INVERTED CONTROLS - left is right, right is left

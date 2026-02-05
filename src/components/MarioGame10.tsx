@@ -208,7 +208,7 @@ const MarioGame10: React.FC = () => {
                     const spawnY = -20;
 
                     const fireball = this.physics.add.sprite(spawnX, spawnY, 'fireball');
-                    fireball.setScale(0.3);
+                    fireball.setScale(0.2);
                     fireball.setAngle(-SLOPE_ANGLE);
                     (fireball.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 
@@ -298,7 +298,7 @@ const MarioGame10: React.FC = () => {
                 <div ref={gameContainerRef}></div>
                 <div>
                     <div style={{ textAlign: 'right', marginTop: '20px' }}>
-                        <strong>Level 10: Sloped World</strong>
+                        <strong>Level 10: Flaming Sisyphus</strong>
                     </div>
                     <div style={{ marginTop: '20px' }}>
                         <button className="button" onClick={() => navigate('game11')}>

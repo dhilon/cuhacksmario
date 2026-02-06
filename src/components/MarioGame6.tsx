@@ -5,6 +5,17 @@ import { navigate } from 'wouter/use-browser-location';
 const MarioGame6: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
 
+    // R key to reload
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'r' || e.key === 'R') {
+                window.location.reload();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     useEffect(() => {
         if (!gameContainerRef.current) return;
 
@@ -291,6 +302,7 @@ const MarioGame6: React.FC = () => {
                         <button className="button" onClick={() => navigate('game7')}>
                             <p className="p2">7th level</p>
                         </button>
+                        <div style={{ textAlign: "right", marginTop: "10px", color: "#aaa", fontSize: "14px" }}>Press R to restart level</div>
                     </div>
                 </div>
             </div>

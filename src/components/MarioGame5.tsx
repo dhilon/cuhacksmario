@@ -5,6 +5,17 @@ import { navigate } from 'wouter/use-browser-location';
 const MarioGame5: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
 
+    // R key to reload
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'r' || e.key === 'R') {
+                window.location.reload();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     useEffect(() => {
         if (!gameContainerRef.current) return;
 
@@ -290,8 +301,8 @@ const MarioGame5: React.FC = () => {
                             detectedSide = localY > 0 ? 'bottom' : 'top';
                         }
 
-                        // Don't attach to the underside of a block
-                        if (detectedSide === 'bottom') {
+                        // Don't attach to the underside of a block or if hitting from below
+                        if (detectedSide === 'bottom' || body.blocked.up || body.touching.up) {
                             continue;
                         }
 
@@ -325,9 +336,8 @@ const MarioGame5: React.FC = () => {
                 if (normalizedAngle > 180) normalizedAngle -= 360;
                 if (normalizedAngle < -180) normalizedAngle += 360;
 
-                // Check if Mario is horizontal (90 degrees) or upside down (beyond 90)
-                // Fall off if absolute angle >= 90 degrees from upright
-                if (Math.abs(normalizedAngle) >= 90) {
+                // Fall off if absolute angle > 45 degrees from upright
+                if (Math.abs(normalizedAngle) > 45) {
                     // Detach and fall
                     attachedPlatform = null;
                     body.setAllowGravity(true);
@@ -424,6 +434,7 @@ const MarioGame5: React.FC = () => {
                         <button className="button" onClick={() => navigate('game6')}>
                             <p className="p2">6th level</p>
                         </button>
+                        <div style={{ textAlign: "right", marginTop: "10px", color: "#aaa", fontSize: "14px" }}>Press R to restart level</div>
                     </div>
                 </div>
             </div>

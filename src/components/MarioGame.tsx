@@ -5,6 +5,17 @@ import { navigate } from 'wouter/use-browser-location';
 const MarioGame: React.FC = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
 
+  // R key to reload
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   useEffect(() => {
     if (!gameContainerRef.current) return;
 
@@ -304,9 +315,11 @@ const MarioGame: React.FC = () => {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
         <div ref={gameContainerRef} ></div>
         <div>
-          <button className="button" onClick={() => navigate("AI")}><p className="p2">View AI</p></button>
-          <div style={{ textAlign: "right", marginTop: "50px" }}>Level 1</div>
+          <div style={{ textAlign: "right", marginTop: "20px" }}>
+            <strong>Level 1: The Start</strong>
+          </div>
           <button className="button" onClick={() => navigate("game2")}><p className="p2">2nd level</p></button>
+          <div style={{ textAlign: "right", marginTop: "10px", color: "#aaa", fontSize: "14px" }}>Press R to restart level</div>
           <div style={{ textAlign: "right", marginTop: "50px" }}>
             <a
               href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -325,6 +338,7 @@ const MarioGame: React.FC = () => {
               Click for a surprise! 🎁
             </a>
           </div>
+          <button className="button" onClick={() => navigate("AI")}><p className="p2">View AI</p></button>
         </div>
 
       </div>

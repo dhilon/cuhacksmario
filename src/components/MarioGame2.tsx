@@ -5,6 +5,17 @@ import { navigate } from 'wouter/use-browser-location';
 const MarioGame2: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
 
+    // R key to reload
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'r' || e.key === 'R') {
+                window.location.reload();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     useEffect(() => {
         if (!gameContainerRef.current) return;
 
@@ -83,7 +94,20 @@ const MarioGame2: React.FC = () => {
             platforms.create(155, 350, 'ground');
             platforms.create(430, 200, 'ground').setScale(0.65).refreshBody();
             platforms.create(350, 120, 'ground').setScale(0.5).refreshBody();
-            platforms.create(530, 290, 'ground').setScale(0.05).refreshBody();
+            // Shrinking invisible block - starts at 0.5, shrinks to 0.05 over 5 seconds
+            const shrinkingBlock = platforms.create(530, 290, 'ground');
+            shrinkingBlock.setScale(0.5).refreshBody();
+
+            this.tweens.add({
+                targets: shrinkingBlock,
+                scaleX: 0.05,
+                scaleY: 0.05,
+                duration: 5000,
+                ease: 'Linear',
+                onUpdate: () => {
+                    shrinkingBlock.refreshBody();
+                }
+            });
             platforms.create(750, 120, 'ground').setScale(0.30).refreshBody();
 
             //Create flag
@@ -308,6 +332,7 @@ const MarioGame2: React.FC = () => {
                         <button className="button" onClick={() => navigate("game3")}>
                             <p className="p2">3rd level</p>
                         </button>
+                        <div style={{ textAlign: "right", marginTop: "10px", color: "#aaa", fontSize: "14px" }}>Press R to restart level</div>
                     </div>
                 </div>
             </div>

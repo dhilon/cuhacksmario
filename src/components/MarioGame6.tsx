@@ -1,9 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { navigate } from 'wouter/use-browser-location';
+import { useLevelCompletion } from '../context/LevelCompletionContext';
+import LevelFooter from './LevelFooter';
 
 const MarioGame6: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
+    const { markLevelComplete } = useLevelCompletion();
+    const onWinRef = useRef(() => markLevelComplete(6));
+    onWinRef.current = () => markLevelComplete(6);
 
     // R key to reload
     useEffect(() => {
@@ -173,6 +178,7 @@ const MarioGame6: React.FC = () => {
             this.physics.add.overlap(player, flag, () => {
                 if (!player.getData('hasLost') && !player.getData('hasWon')) {
                     player.setData('hasWon', true);
+                    onWinRef.current();
                     player.setVelocity(0, 0);
                     player.anims.stop();
                     player.setTint(0x00ff00);
@@ -306,6 +312,7 @@ const MarioGame6: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <LevelFooter />
         </div>
     );
 };

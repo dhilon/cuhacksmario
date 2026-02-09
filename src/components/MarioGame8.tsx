@@ -1,9 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { navigate } from 'wouter/use-browser-location';
+import { useLevelCompletion } from '../context/LevelCompletionContext';
+import LevelFooter from './LevelFooter';
 
 const MarioGame8: React.FC = () => {
     const gameContainerRef = useRef<HTMLDivElement>(null);
+    const { markLevelComplete } = useLevelCompletion();
+    const onWinRef = useRef(() => markLevelComplete(8));
+    onWinRef.current = () => markLevelComplete(8);
 
     // R key to reload
     useEffect(() => {
@@ -274,6 +279,7 @@ const MarioGame8: React.FC = () => {
                     // Check if both flags collected
                     if (player.getData('flagRightCollected')) {
                         player.setData('hasWon', true);
+                        onWinRef.current();
                         player.setVelocity(0, 0);
                         player.anims.stop();
                         player.setTint(0x00ff00);
@@ -310,6 +316,7 @@ const MarioGame8: React.FC = () => {
                     // Check if both flags collected
                     if (player.getData('flagLeftCollected')) {
                         player.setData('hasWon', true);
+                        onWinRef.current();
                         player.setVelocity(0, 0);
                         player.anims.stop();
                         player.setTint(0x00ff00);
@@ -476,6 +483,7 @@ const MarioGame8: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <LevelFooter />
         </div>
     );
 };

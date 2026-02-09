@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { navigate } from 'wouter/use-browser-location';
+import { useLevelCompletion } from '../context/LevelCompletionContext';
+import LevelFooter from './LevelFooter';
 
 const MarioGame: React.FC = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
+  const { markLevelComplete } = useLevelCompletion();
+  const onWinRef = useRef(() => markLevelComplete(1));
+  onWinRef.current = () => markLevelComplete(1);
 
   // R key to reload
   useEffect(() => {
@@ -180,6 +185,7 @@ const MarioGame: React.FC = () => {
         if (!player.getData('hasLost') && !player.getData('hasWon')) {
           // Freeze Mario
           player.setData('hasWon', true);
+          onWinRef.current();
           player.setVelocity(0, 0);
           player.anims.stop(); // Stop animations
           player.setTint(0x00ff00); // Optional: Add a visual effect (e.g., tint Mario green)
@@ -342,10 +348,7 @@ const MarioGame: React.FC = () => {
         </div>
 
       </div>
-
-
-
-
+      <LevelFooter />
 
 
     </div>

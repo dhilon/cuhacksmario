@@ -259,10 +259,12 @@ const MarioGame16: React.FC = () => {
                             // Correct!
                             currentStepInRound++;
 
-                            // Flash platform green
+                            // Highlight platform and symbol green for 3 seconds
                             sp.platform.setTint(0x00FF00);
-                            this.time.delayedCall(200, () => {
+                            sp.symbolText.setColor('#00FF00');
+                            this.time.delayedCall(3000, () => {
                                 sp.platform.setTint(SYMBOL_COLORS[sp.symbolIndex]);
+                                sp.symbolText.setColor('#FFFFFF');
                             });
 
                             // Check if completed current round (got all symbols 1 through currentRound)

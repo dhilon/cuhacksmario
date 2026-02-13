@@ -148,10 +148,10 @@ const MarioGame13: React.FC = () => {
             // Size: 20x5 (2/5 of original 50x12)
             const bouncyConfigs = [
                 { x: 110, y: 550, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
-                { x: 150, y: 520, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
+                { x: 150, y: 520, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 280, y: 480, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 400, y: 520, width: 20, height: 5, strength: BOUNCE_STRONG, color: 0xFF0000 },
-                { x: 200, y: 420, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
+                { x: 200, y: 420, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 500, y: 450, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 350, y: 380, width: 20, height: 5, strength: BOUNCE_STRONG, color: 0xFF0000 },
                 { x: 600, y: 380, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
@@ -159,7 +159,7 @@ const MarioGame13: React.FC = () => {
                 { x: 700, y: 300, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
                 { x: 250, y: 280, width: 20, height: 5, strength: BOUNCE_STRONG, color: 0xFF0000 },
                 { x: 550, y: 240, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
-                { x: 800, y: 220, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
+                { x: 800, y: 220, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 650, y: 160, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 900, y: 140, width: 20, height: 5, strength: BOUNCE_STRONG, color: 0xFF0000 },
                 { x: 1000, y: 120, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },

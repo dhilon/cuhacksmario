@@ -120,9 +120,10 @@ const MarioGame14: React.FC = () => {
             platforms.create(1100, 120, 'ground').setScale(0.3, 0.15).refreshBody();
 
             // Create turrets
-            createTurret(this, 450, 390, -1, 2500);
-            createTurret(this, 850, 320, -1, 2000);
-            createTurret(this, 250, 270, 1, 3000);
+            createTurret(this, 450, 390, -1, 1667);
+            createTurret(this, 850, 320, -1, 1333);
+            createTurret(this, 250, 270, 1, 2000);
+            createTurret(this, 900, 120, -1, 1500);
 
             // Create flag
             const flag = this.physics.add.sprite(1100, 100, 'flag').setScale(0.15);

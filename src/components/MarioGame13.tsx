@@ -163,6 +163,7 @@ const MarioGame13: React.FC = () => {
                 { x: 650, y: 160, width: 20, height: 5, strength: BOUNCE_MEDIUM, color: 0xFFFF00 },
                 { x: 900, y: 140, width: 20, height: 5, strength: BOUNCE_STRONG, color: 0xFF0000 },
                 { x: 1000, y: 120, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
+                { x: 1180, y: 550, width: 20, height: 5, strength: BOUNCE_WEAK, color: 0x00FF00 },
             ];
 
             bouncyConfigs.forEach((config) => {

@@ -417,8 +417,8 @@ const MarioGame16: React.FC = () => {
                             isShowingSequence = false;
                             gameStarted = true;
 
-                            // Start round timer: 4 * sqrt(n) seconds
-                            roundTimeLimit = 4 * Math.sqrt(count);
+                            // Start round timer: 6 * sqrt(n) seconds
+                            roundTimeLimit = 6 * Math.sqrt(count);
                             roundStartTime = scene.time.now;
                             roundInProgress = true;
                         });

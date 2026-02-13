@@ -229,15 +229,18 @@ const MarioGame14: React.FC = () => {
         }
 
         function fireProjectile(scene: Phaser.Scene, turret: Turret) {
-            const projectile = scene.physics.add.sprite(
+            // Create a circle as the projectile (3/4 size = radius 6)
+            const circle = scene.add.circle(
                 turret.x + turret.direction * 25,
                 turret.y,
-                'ground'
+                6,
+                0xFF0000
             );
-            projectile.setScale(0.08, 0.08);
-            projectile.setTint(0xFF4444);
-            (projectile.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-            projectile.setVelocityX(PROJECTILE_SPEED * turret.direction);
+            circle.setDepth(101); // Above dark overlay so we can control visibility with color
+            scene.physics.add.existing(circle);
+            const projectile = circle as unknown as Phaser.Physics.Arcade.Sprite;
+            (circle.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+            (circle.body as Phaser.Physics.Arcade.Body).setVelocityX(PROJECTILE_SPEED * turret.direction);
             projectiles.push(projectile);
 
             scene.physics.add.overlap(player, projectile, () => {
@@ -334,6 +337,16 @@ const MarioGame14: React.FC = () => {
                 if (projectile.x < -50 || projectile.x > 1250) {
                     projectile.destroy();
                     return false;
+                }
+                // Change color based on distance from player (red in light, black in darkness)
+                const dx = projectile.x - player.x;
+                const dy = projectile.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const circle = projectile as unknown as Phaser.GameObjects.Arc;
+                if (distance <= VISIBILITY_RADIUS) {
+                    circle.setFillStyle(0xFF0000); // Bright red in light
+                } else {
+                    circle.setFillStyle(0x000000); // Black in darkness
                 }
                 return true;
             });
